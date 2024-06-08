@@ -1,51 +1,34 @@
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import io.restassured.response.Response;
-import static io.restassured.RestAssured.baseURI;
 
-import java.net.HttpURLConnection;
-
-public class OrderListTest {
-
-    private String accessToken;
-    private UserCredentials registrationCredentials;
+public class OrderListTest extends BaseTest {
 
     @Before
+    @Override
     public void setUp() {
-        baseURI = Adresses.BASE_URI;
-        registrationCredentials = UserCredentials.random();
-    }
-
-    @After
-    public void deleteUser() {
-        if (accessToken != null && !accessToken.isEmpty()) {
-            UserHelper.deleteUserInformation(accessToken)
-                    .then()
-                    .log().all()
-                    .statusCode(HttpURLConnection.HTTP_ACCEPTED);
-        }
+        // Вызов метода setUp() из BaseTest для установки базового URI и генерации случайных учетных данных
+        super.setUp();
     }
 
     @Test
-    @DisplayName("Get order list with authorization")
-    @Description("Check that the correct order list is returned with authorization")
+    @DisplayName("Получение списка заказов с авторизацией")
+    @Description("Проверка, что возвращается корректный список заказов при авторизации")
     public void testGetOrderListWithAuthorization() {
-        // Создать юзера
+        // Создание пользователя и получение токена доступа
         Response response = UserHelper.createValidUser(registrationCredentials);
         accessToken = response.jsonPath().getString("accessToken");
 
-        // Проверить, что вернулся корректный список
+        // Проверка, что возвращается корректный список заказов
         OrderListHelper.validateOrderListWithAuthorization(accessToken);
     }
 
     @Test
-    @DisplayName("Get order list without authorization")
-    @Description("Check that the appropriate error message is returned when attempting to get the order list without authorization")
+    @DisplayName("Получение списка заказов без авторизации")
+    @Description("Проверка, что возвращается соответствующее сообщение об ошибке при попытке получить список заказов без авторизации")
     public void testGetOrderListWithoutAuthorization() {
-
         OrderListHelper.validateOrderListWithoutAuthorization();
     }
 }

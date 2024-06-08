@@ -7,14 +7,21 @@ import io.restassured.response.Response;
 import java.util.Arrays;
 import java.util.List;
 
-public class OrderCreationTest {
+public class OrderCreationTest extends BaseTest {
 
     private List<String> ingredientIds;
 
     @Before
+    @Override
     public void setUp() {
+        // Вызов метода setUp() из BaseTest для установки базового URI и генерации случайных учетных данных
+        super.setUp();
+
         // Отправка запроса для получения списка ингредиентов
         ingredientIds = OrderHelper.getIngredientIds(Adresses.BASE_URI);
+
+        // Регистрация пользователя и получение токена доступа
+        accessToken = UserHelper.createValidUser(registrationCredentials).then().extract().path("accessToken");
     }
 
     @Test
@@ -23,7 +30,7 @@ public class OrderCreationTest {
     public void testCreateOrderWithAuthorization() {
         // Создание заказа с авторизацией и использованием извлеченных идентификаторов ингредиентов
         OrderRequest orderRequest = new OrderRequest(ingredientIds);
-        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, "your_access_token", Adresses.BASE_URI);
+        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, accessToken, Adresses.BASE_URI);
         OrderValidator.validateSuccessfulOrderCreation(response);
     }
 
@@ -43,7 +50,7 @@ public class OrderCreationTest {
     public void testCreateOrderWithoutIngredients() {
         // Создание заказа без ингредиентов
         OrderRequest orderRequest = new OrderRequest(null);
-        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, "your_access_token", Adresses.BASE_URI);
+        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, accessToken, Adresses.BASE_URI);
         OrderValidator.validateOrderCreationWithoutIngredients(response);
     }
 
@@ -53,7 +60,7 @@ public class OrderCreationTest {
     public void testCreateOrderWithInvalidIngredientsHash() {
         // Создание заказа с неверным хешем ингредиентов
         OrderRequest orderRequest = new OrderRequest(Arrays.asList("invalid_ingredient_hash"));
-        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, "your_access_token", Adresses.BASE_URI);
+        Response response = OrderHelper.createOrderWithAuthorization(orderRequest, accessToken, Adresses.BASE_URI);
         OrderValidator.validateOrderCreationWithInvalidIngredientsHash(response);
     }
 }

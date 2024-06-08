@@ -1,23 +1,18 @@
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
 
-import static io.restassured.RestAssured.baseURI;
-
-public class UserCreationTest {
-
-    private String accessToken;
-    private UserCredentials registrationCredentials;
+public class UserCreationTest extends BaseTest {
 
     @Before
+    @Override
     public void setUp() {
-        baseURI = Adresses.BASE_URI;
-        registrationCredentials = UserCredentials.random();
+        // Вызов метода setUp() из BaseTest для установки базового URI и генерации случайных учетных данных
+        super.setUp();
     }
 
     @Test
@@ -33,26 +28,16 @@ public class UserCreationTest {
         accessToken = response.jsonPath().getString("accessToken");
     }
 
-    @After
-    public void deleteUser() {
-        if (accessToken != null && !accessToken.isEmpty()) {
-            UserHelper.deleteUserInformation(accessToken)
-                    .then()
-                    .log().all()
-                    .statusCode(HttpURLConnection.HTTP_ACCEPTED);
-        }
-    }
-
     @Test
     @DisplayName("Тест создания пользователя с существующим email")
     @Description("Проверить, что невозможно создать пользователя с уже существующим email")
     public void testUserCreationWithExistingEmail() {
         // Сначала создать пользователя
-        Response response = UserHelper.createInvalidUser(registrationCredentials);
+        Response response = UserHelper.createValidUser(registrationCredentials);
         UserHelper.verifyUserCreationSuccess(response);
 
         // Попытка создать пользователя с тем же email снова
-        response = UserHelper.createInvalidUser(registrationCredentials);
+        response = UserHelper.createValidUser(registrationCredentials);
         UserHelper.verifyUserCreationFailure(response, HttpURLConnection.HTTP_FORBIDDEN, "User already exists");
     }
 
